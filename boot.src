@@ -1,0 +1,35 @@
+#
+# SPDX-License-Identifier:	GPL-2.0+
+#	After editing this file you MUST remove the old u-boot header 
+#	and generate a new u-boot header via:
+#	mkimage -C none -A arm -T script -d boot.src boot.scr
+#
+#	Copyright (c) 2023 Devmfc
+#	This optional bootscript will allow installed bootscripts from 
+#	CoreElec/LibreElec/Fenix/Armbian to start this image
+# 	without using the reset button.
+
+if test "${devtype}" = ""; then
+	# CoreElec
+	if test "${devnr}" != ""; then
+		devtype=${device}
+		devnum=${devnr}
+		distro_bootpart=${partnr}
+	# LibreElec / Armbian TVBOX
+	elif test "${usbdev}" != ""; then
+		devtype=usb
+		devnum=${usbdev}
+	# Fenix
+	elif test "${autoscript_source}" != ""; then
+		devtype=${autoscript_source}
+	fi;
+	test "${distro_bootpart}" = "" && distro_bootpart=${bootpart}
+	test "${distro_bootpart}" = "" && distro_bootpart=${partnum}
+fi
+
+test "${loadaddr}" = "" && loadaddr=${scriptaddr}
+test "${devtype}" = "" && devtype=mmc
+test "${devnum}" = "" && devnum=0
+test "${distro_bootpart}" = "" && distro_bootpart=1
+test "${cmd_read}" = "" && cmd_read="fatload ${devtype} ${devnum}:${distro_bootpart}"
+${cmd_read} ${loadaddr} bootscript && autoscr ${loadaddr};
